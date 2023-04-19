@@ -1,4 +1,5 @@
 
+
 local QBCore = exports['qb-core']:GetCoreObject()
 local fishing = false
 local pause = false
@@ -6,6 +7,7 @@ local pausetimer = 0
 local correct = 0
 local genderNum = 0
 local peds = {} 
+
 
 --============================================================== For testing
 
@@ -20,6 +22,22 @@ if Config.TestFish then
 end
 
 --============================================================== Threads
+
+local function DrawText3D(x, y, z, text)
+	SetTextScale(0.35, 0.35)
+    SetTextFont(4)
+    SetTextProportional(1)
+    SetTextColour(255, 255, 255, 215)
+    SetTextEntry("STRING")
+    SetTextCentre(true)
+    AddTextComponentString(text)
+    SetDrawOrigin(x,y,z, 0)
+    DrawText(0.0, 0.0)
+    local factor = (string.len(text)) / 370
+    DrawRect(0.0, 0.0+0.0125, 0.017+ factor, 0.03, 0, 0, 0, 75)
+    ClearDrawOrigin()
+end
+
 CreateThread(function()
 	while true do
 		Wait(1200)
@@ -45,11 +63,7 @@ CreateThread(function()
 			if fishing then
 				playerPed = PlayerPedId()
 				local pos = GetEntityCoords(playerPed)
-				if GetWaterHeight(pos.x, pos.y, pos.z-2, pos.z -3.0)  then
-				else
-					endFishing()
-					QBCore.Functions.Notify('Water isnt deep enough to fish', 'error')
-				end
+
 				if IsEntityDead(playerPed) or IsEntityInWater(playerPed) then
 					endFishing()
 					QBCore.Functions.Notify('Fishing ended', 'error')
@@ -76,13 +90,13 @@ end)
 
 CreateThread(function()
 	while true do
-
+		local playerCoords = GetEntityCoords(PlayerPedId())
 		local wait = math.random(Config.FishingWaitTime.minTime , Config.FishingWaitTime.maxTime)
 		Wait(wait)
 		if fishing then
 			pause = true
 			correct = 1
-			TriggerEvent('3dme:triggerDisplay', 'Fishing Rod Starts to Tug!')
+			
 			exports['textUi']:DrawTextUi('show', "Press [F] to Catch Fish!")
 			input = 0
 			pausetimer = 0
@@ -114,6 +128,22 @@ CreateThread(function()
 		end
 	end
 end)
+--============================================================== TEST FUNCTIONS
+
+RegisterCommand("testground", function(source)
+	local ped = PlayerPedId()
+	local posped = GetEntityCoords(ped)
+	local num = StartShapeTestCapsule(posped.x,posped.y,posped.z+4,posped.x,posped.y,posped.z-2.0, 2, 1, ped, 7)
+	local arg1, arg2, arg3, arg4, arg5 = GetShapeTestResultEx(num)
+	print(arg1, arg2, arg3, arg4, arg5)
+end)
+
+function GetGroundHash(ped)
+	local posped = GetEntityCoords(ped)
+	local num = StartShapeTestCapsule(posped.x,posped.y,posped.z+4,posped.x,posped.y,posped.z-2.0, 2, 1, ped, 7)
+	local arg1, arg2, arg3, arg4, arg5 = GetShapeTestResultEx(num)
+	print(arg1, arg2, arg3, arg4, arg5)
+end
 
 --============================================================== Events
 
@@ -124,28 +154,30 @@ end)
 RegisterNetEvent('fishing:client:attemptTreasureChest', function()
 	local ped = PlayerPedId()
 	attemptTreasureChest()
-	QBCore.Functions.TriggerCallback('QBCore:HasItem', function(HasItem)
-		if HasItem then
-			QBCore.Functions.Progressbar("accepted_key", "Inserting Key..", (math.random(2000, 5000)), false, true, {
-				disableMovement = true,
-				disableCarMovement = true,
-				disableMouse = false,
-				disableCombat = true,
-			}, {
-				animDict = "mini@repair",
-				anim = "fixing_a_player",
-				flags = 16,
-			}, {}, {}, function() -- Done
-				ClearPedTasks(ped)
-				openedTreasureChest()
-			end, function() -- Cancel
-				ClearPedTasks(ped)
-				QBCore.Functions.Notify("Canceled!", "error")
-			end)
-		else
-		  QBCore.Functions.Notify("You dont have a key to this lock!", "error")
-		end
-	  end, 'fishingkey')
+	local HasItem = QBCore.Functions.HasItem({'fishingkey', })
+		
+	if HasItem then
+		QBCore.Functions.Progressbar("accepted_key", "Inserting Key..", (math.random(2000, 5000)), false, true, {
+			disableMovement = true,
+			disableCarMovement = true,
+			disableMouse = false,
+			disableCombat = true,
+		}, {
+			animDict = "mini@repair",
+			anim = "fixing_a_player",
+			flags = 16,
+		}, {}, {}, function() -- Done
+			ClearPedTasks(ped)
+			
+			openedTreasureChest() --MM change to SERVER FUNCTION
+		end, function() -- Cancel
+			ClearPedTasks(ped)
+			QBCore.Functions.Notify("Canceled!", "error")
+		end)
+	else
+		QBCore.Functions.Notify("You dont have a key to this lock!", "error")
+	end
+
 end)
 
 
@@ -261,17 +293,22 @@ end)
 
 RegisterNetEvent('fishing:fishstart', function()
 	local playerPed = PlayerPedId()
-	local pos = GetEntityCoords(playerPed) 
+	local pos = GetEntityCoords(playerPed)
+	local hit, cords = IsFacingWater()
+
 	if IsPedSwimming(playerPed) then return QBCore.Functions.Notify("You can't be swimming and fishing at the same time.", "error") end 
 	if IsPedInAnyVehicle(playerPed) then return QBCore.Functions.Notify("You need to exit your vehicle to start fishing.", "error") end 
-	if GetWaterHeight(pos.x, pos.y, pos.z-2, pos.z - 3.0)  then
+	if not hit and not cords then return QBCore.Functions.Notify("You need to be facing water to start fishing.", "error") end
+	if GetWaterHeight(pos.x, pos.y, pos.z - 1.0, pos.z - 2.0) or hit then
+		
 		local time = 1000
 		QBCore.Functions.Notify('Using Fishing Rod', 'primary', time)
 		Wait(time)
-		exports['textUi']:DrawTextUi('show', "Press [X] to stop fishing at any time")
+		QBCore.Functions.Notify('Press [X] to stop fishing at any time', 'primary')
 		fishAnimation()
 	else
-		QBCore.Functions.Notify('You need to go further away from the shore', 'error')
+		QBCore.Functions.Notify('You need to go closer to the shore', 'error')
+
 	end
 end, false)
 
@@ -325,7 +362,7 @@ RegisterNetEvent('doj:client:rentaBoat', function(args)
 			if args == 1 then 
 				QBCore.Functions.SpawnVehicle(Config.RentalBoat, function(boat)
 					SetVehicleNumberPlateText(boat, "Rent-a-Boat")
-					exports['LegacyFuel']:SetFuel(boat, 100.0)
+					exports[Config.FuelExport]:SetFuel(boat, 100.0)
 					SetEntityHeading(boat, Config.BoatSpawnLocation.LaPuerta.w)
 					TaskWarpPedIntoVehicle(PlayerPedId(), boat, -1)
 					TriggerEvent("vehiclekeys:client:SetOwner", GetVehicleNumberPlateText(boat))
@@ -334,7 +371,7 @@ RegisterNetEvent('doj:client:rentaBoat', function(args)
 			elseif args == 2 then 
 				QBCore.Functions.SpawnVehicle(Config.RentalBoat, function(boat)
 					SetVehicleNumberPlateText(boat, "Rent-a-Boat")
-					exports['LegacyFuel']:SetFuel(boat, 100.0)
+					exports[Config.FuelExport]:SetFuel(boat, 100.0)
 					SetEntityHeading(boat, Config.BoatSpawnLocation.PaletoCove.w)
 					TaskWarpPedIntoVehicle(PlayerPedId(), boat, -1)
 					TriggerEvent("vehiclekeys:client:SetOwner", GetVehicleNumberPlateText(boat))
@@ -343,7 +380,7 @@ RegisterNetEvent('doj:client:rentaBoat', function(args)
 			elseif args == 3 then 
 				QBCore.Functions.SpawnVehicle(Config.RentalBoat, function(boat)
 					SetVehicleNumberPlateText(boat, "Rent-a-Boat")
-					exports['LegacyFuel']:SetFuel(boat, 100.0)
+					exports[Config.FuelExport]:SetFuel(boat, 100.0)
 					SetEntityHeading(boat, Config.BoatSpawnLocation.ElGordo.w)
 					TaskWarpPedIntoVehicle(PlayerPedId(), boat, -1)
 					TriggerEvent("vehiclekeys:client:SetOwner", GetVehicleNumberPlateText(boat))
@@ -352,7 +389,7 @@ RegisterNetEvent('doj:client:rentaBoat', function(args)
 			elseif args == 3 then
 				QBCore.Functions.SpawnVehicle(Config.RentalBoat, function(boat)
 					SetVehicleNumberPlateText(boat, "Rent-a-Boat")
-					exports['LegacyFuel']:SetFuel(boat, 100.0)
+					exports[Config.FuelExport]:SetFuel(boat, 100.0)
 					SetEntityHeading(boat, Config.BoatSpawnLocation.ActDam.w)
 					TaskWarpPedIntoVehicle(PlayerPedId(), boat, -1)
 					TriggerEvent("vehiclekeys:client:SetOwner", GetVehicleNumberPlateText(boat))
@@ -361,7 +398,7 @@ RegisterNetEvent('doj:client:rentaBoat', function(args)
 			else
 				QBCore.Functions.SpawnVehicle(Config.RentalBoat, function(boat)
 					SetVehicleNumberPlateText(boat, "Rent-a-Boat")
-					exports['LegacyFuel']:SetFuel(boat, 100.0)
+					exports[Config.FuelExport]:SetFuel(boat, 100.0)
 					SetEntityHeading(boat, Config.BoatSpawnLocation.AlamoSea.w)
 					TaskWarpPedIntoVehicle(PlayerPedId(), boat, -1)
 					TriggerEvent("vehiclekeys:client:SetOwner", GetVehicleNumberPlateText(boat))
@@ -499,6 +536,33 @@ end)
 
 --============================================================== Functions
 
+--=====================================================
+--This below tests for water in order to fish at various areas.
+
+function IsFacingWater()
+    local ped = PlayerPedId()
+    local headPos = GetPedBoneCoords(ped, 31086, 0.0, 0.0, 0.0)
+    local offsetPos = GetOffsetFromEntityInWorldCoords(ped, 0.0, 50.0, -25.0)
+	--==Below only needed for line of sight line
+    --Citizen.CreateThread(function()
+    --    local time = GetGameTimer()
+    --    while time + 5000 > GetGameTimer() do
+    --      DrawLine(headPos.x, headPos.y, headPos.z, offsetPos.x, offsetPos.y, offsetPos.z, 255, 0, 255, 255)
+    --      Wait(0)
+    --    end
+    --end)
+
+    local hit, hitPos = TestProbeAgainstWater(headPos.x, headPos.y, headPos.z, offsetPos.x, offsetPos.y, offsetPos.z)
+    local ray = StartExpensiveSynchronousShapeTestLosProbe(headPos.x, headPos.y, headPos.z, offsetPos.x, offsetPos.y, offsetPos.z, 160, 0, 7)
+    local retval --[[ integer ]], hit --[[ boolean ]], endCoords --[[ vector3 ]], surfaceNormal --[[ vector3 ]], entityHit --[[ Entity ]] = GetShapeTestResult(ray)
+    local retval2 --[[ boolean ]], height --[[ number ]] = TestVerticalProbeAgainstAllWater(offsetPos.x, offsetPos.y, offsetPos.z, 160)
+    local isinwater = IsEntityInWater(ped)
+	print(isinwater)
+	print(retval, hit)
+	print(retval2, height)
+    return retval2, height
+end
+
 loseBait = function()
 	local chance = math.random(1, 15)
 	if chance <= 5 then
@@ -518,9 +582,10 @@ loseBaitAnimation = function()
 	end
 	TaskPlayAnim(ped, animDict, animName, 1.0, -1.0, 1.0, 0, 0, 0, 48, 0)
 	RemoveAnimDict(animDict)
-	exports['textUi']:DrawTextUi('show', "Fish took your bait!")
+	--exports['textUi']:DrawTextUi('show', "Fish took your bait!")
+	QBCore.Functions.Notify('Fish took your bait!', 'primary')
 	Wait(2000)
-	exports['textUi']:DrawTextUi('hide')
+	--exports['textUi']:DrawTextUi('hide')
 	fishAnimation()
 end
 
@@ -555,25 +620,25 @@ catchAnimation = function()
 end
 
 fishAnimation = function()
-	QBCore.Functions.TriggerCallback('QBCore:HasItem', function(HasItem)
-		if HasItem then
-			local ped = PlayerPedId()
-			local animDict = "amb@world_human_stand_fishing@idle_a"
-			local animName = "idle_c"
-			RequestAnimDict(animDict)
-			while not HasAnimDictLoaded(animDict) do
-				Wait(100)
-			end
-			TaskPlayAnim(ped, animDict, animName, 1.0, -1.0, 1.0, 11, 0, 0, 0, 0)
-			fishingRodEntity()
-			fishing = true
-			Wait(3700)
-			exports['textUi']:DrawTextUi('hide') 
-		else
-		  endFishing()
-		  QBCore.Functions.Notify("You dont have any fishing bait", "error")
+	
+	local HasItem = QBCore.Functions.HasItem({'fishbait', 'fishingrod'})
+	if HasItem then
+		local ped = PlayerPedId()
+		local animDict = "amb@world_human_stand_fishing@idle_a"
+		local animName = "idle_c"
+		RequestAnimDict(animDict)
+		while not HasAnimDictLoaded(animDict) do
+			Wait(100)
 		end
-	end, 'fishbait')
+		TaskPlayAnim(ped, animDict, animName, 1.0, -1.0, 1.0, 11, 0, 0, 0, 0)
+		fishingRodEntity()
+		fishing = true
+		Wait(3700)
+		exports['textUi']:DrawTextUi('hide') 
+	else
+		endFishing()
+		QBCore.Functions.Notify("You dont have any fishing bait", "error")
+	end
 end
 
 fishingRodEntity = function()
@@ -613,14 +678,13 @@ end
 
 openedTreasureChest = function()
 	if math.random(1,15) == 10 then
-		TriggerServerEvent("QBCore:Server:RemoveItem", "fishingkey", 1)
 		TriggerEvent("inventory:client:ItemBox", QBCore.Shared.Items["fishingkey"], "remove", 1)
 		QBCore.Functions.Notify("The corroded key has snapped", "error", 7500)
 	end
-	TriggerServerEvent("QBCore:Server:RemoveItem", "fishinglootbig", 1)
-	TriggerEvent("inventory:client:ItemBox", QBCore.Shared.Items["fishinglootbig"], "remove", 1)
+	TriggerServerEvent('fishing:server:getYoStuff')
+
 	QBCore.Functions.Notify("Treasure chest opened! Be sure to collect all of your loot!!", "success", 7500)
-	local ShopItems = {} 
+	local ShopItems = {}
 	ShopItems.label = "Treasure Chest"
 	ShopItems.items = Config.largeLootboxRewards
 	ShopItems.slots = #Config.largeLootboxRewards
