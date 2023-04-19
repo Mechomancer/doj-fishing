@@ -2,6 +2,7 @@ Config = {}
 
 Config.Fish24hours = true                                       -- [true = fish anytime] [false = fishing only available moring to night (6am to 11pm in-game time)]
 Config.FishingWaitTime = {minTime = 21000, maxTime = 45000}     -- How long a player will be waiting to fish, during or after casting fishingrod
+Config.FuelExport = "ps-fuel"					-- What fuel system are you using "LegacyFuel", "ps-fuel", "lj-fuel" 
 Config.RentalBoat = "dinghy"                                    -- Fishing boat of Choice
 Config.StopFishing =  73                                        -- Stop Fishing Key [X] (https://docs.fivem.net/docs/game-references/controls/)
 Config.BoatPrice = 100                                          -- Price of the boat rental, price is divided when boat is returned
