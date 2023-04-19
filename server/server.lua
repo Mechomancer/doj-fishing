@@ -14,7 +14,7 @@ QBCore.Functions.CreateUseableItem("fishingrod", function(source, item)
  		TriggerClientEvent('fishing:fishstart', source)
     end
 end)
-
+------
 QBCore.Functions.CreateUseableItem("fishicebox", function(source, item)
     local Player = QBCore.Functions.GetPlayer(source)
 	if Player.Functions.GetItemBySlot(item.slot) ~= nil then
@@ -358,6 +358,12 @@ RegisterNetEvent('fishing:server:BuyFishingGear', function(args)
 	end
 end)
 
+RegisterNetEvent('fishing:server:getYoStuff', function()
+	local src = source
+    local Player = QBCore.Functions.GetPlayer(src)
+	Player.Functions.RemoveItem("fishinglootbig", 1)
+	Player.Functions.RemoveItem("fishingkey", 1)
+end) 
 
 --============================================================================ Callbacks
 QBCore.Functions.CreateCallback('fishing:server:checkMoney', function(source, cb)
