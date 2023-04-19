@@ -8,12 +8,14 @@
 **[Inspiration](https://github.com/sven20202020/qb-fishing)**
 
 # About
-- Optimized
-- Fish anywhere
-- Random loot pool
+- Optimized / Now works with new QBCore
+- Fish anywhere besides Pools most rivers and such
+- Random loot pool Check Config.lua
 - 3 diffrent skillbars to choose from
-- Utilizes qb-target,qb-menu,& text ui
-
+- Utilizes qb-target,qb-menu,& text ui <ehh not so much Most moved to qb-notify, still working on this.>
+- Uses Raycast to find water now <real Water> Will be adding some functions later on for freshwater rivers and such for just
+	Bass, Trout, Salmon and possibly Catfish.
+	
 # Info
 - **[Rent](https://streamable.com/bymhyv)** a fishing boat
 - **[Return](https://streamable.com/ns3qeb)** boat for small refund
@@ -29,11 +31,18 @@
 - Chance to catch a ***Small Loot Box*** & ***Treasure Chest*** while fishing
 - **[Small Loot Box](https://streamable.com/4ff2ht)** contains a **[Corroded Key](https://i.imgur.com/Pyg81vH.png)** that is needed to open a **[Treasure Chest](https://i.imgur.com/dIKE1rw.png)**
 
+I needed a Decent fishing Script and DOJWUN had a pretty good one, only problem was it didn't work with the new QBCore, So i did a little tinkering
+Got some changes for the new Core, Added the raycast to find water, and fixed the HASITEM and Item control to Server side like it should be
+Also moved the Images together named correctly to the images folder <they are 100 x 100 BTW>
 
+Plan to add Freshwater poly checks with Freshwater fish as well later but i've tested it and it's working pretty good. If your still running Old Core
+I don't think this version will work for ya, But if you are this one is spot on. Thanks DOJWUN!!
+
+PLEASE LET ME KNOW IF YOUR HAVING ISSUES I WOULD LIKE TO MAKE SURE THIS STAYS UP TO DATE!!
 
 
 # Dependencies
-**[textUi](https://github.com/dojwun/textUi)**
+**[textUi](https://github.com/dojwun/textUi)** Will move away from this completely later.
 
 **[qb-menu](https://github.com/qbcore-framework/qb-menu)**
 
@@ -53,43 +62,12 @@
 
 
 # images
-- **Regular Fish**
+All images are now in the IMAGES FOLDER - Simply Copy them all and Paste them into your qb-inventory/html/images folder
+This was done for simplicity sake by MechoMancer.
 
-![bass](https://i.imgur.com/kye5oAh.png)
-![sting](https://i.imgur.com/KtUf7C6.png)
-![flounder](https://i.imgur.com/O0JYxfp.png)
-![codfish](https://i.imgur.com/rfwERIW.png)
-![mackerel](https://i.imgur.com/A1Qrktl.png)
-
-- **Trash items**
- 
-![fishingboot](https://i.imgur.com/Vuk4yHA.png)
-![fishingtin](https://i.imgur.com/8G5Mx4i.png)
-
-- **Exotic Fish**
-
-![tiger](https://i.imgur.com/L5Zi26u.png)
-![hammer](https://i.imgur.com/SpDnz4O.png)
-![dolphin](https://i.imgur.com/Pisfl7A.png)
-![whale](https://i.imgur.com/iB9Ky68.png)
-
-- **Gear & items**
- 
-![rod](https://i.imgur.com/dzM4b7U.png)
-![bait](https://i.imgur.com/A4XBvDb.png)
-![anchor](https://i.imgur.com/1OYiDYa.png)
-![fishingicebox](https://i.imgur.com/YnJzonA.png)
-
-- **Rewards**
- 
-![tacklebox](https://i.imgur.com/DmYYb30.png)
-![key](https://i.imgur.com/Pyg81vH.png)
-![smallloot](https://i.imgur.com/fGsqgZQ.png)
-![bigloot](https://i.imgur.com/TcCevdc.png)
-![pearlscard](https://i.imgur.com/xFEmoLt.png)
 
 # Required
-- qb-core/shared.lua info
+- qb-core/shared/items.lua info
 ```
 	-- Regular Fish
 	['stingray'] 			     	 = {['name'] = 'stingray', 				    ['label'] = 'Stingray',            		['weight'] = 2500,      ['type'] = 'item',      ['image'] = 'stingray.png',         	['unique'] = true,     ['useable'] = false,     ['shouldClose'] = false,     ['combinable'] = nil,   ['description'] = 'Stingray'},
