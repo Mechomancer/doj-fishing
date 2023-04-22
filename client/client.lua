@@ -7,9 +7,7 @@ local correct = 0
 local genderNum = 0
 local peds = {} 
 
-local GroundTypes = {
-	555004797, 
-}
+
 
 --============================================================== For testing
 
@@ -82,7 +80,7 @@ CreateThread(function()
 					TriggerEvent('fishing:SkillBar')
 				else
 					QBCore.Functions.Notify('The Fish Escaped!', 'error')
-
+					
 					loseBait()
 				end
 			end
@@ -99,7 +97,8 @@ CreateThread(function()
 			pause = true
 			correct = 1
 			DrawText3D(playerCoords.x, playerCoords.y, playerCoords.z + 2.0, 'Fishing Rod Starts to Tug!')
-
+			--TriggerEvent('3dme:triggerDisplay', 'Fishing Rod Starts to Tug!')
+			--exports['textUi']:DrawTextUi('show', "Press [F] to Catch Fish!")
 			QBCore.Functions.Notify('Press [F] to Catch Fish!', 'primary')
 			input = 0
 			pausetimer = 0
@@ -131,22 +130,6 @@ CreateThread(function()
 		end
 	end
 end)
---============================================================== TEST FUNCTIONS
-
-RegisterCommand("testground", function(source)
-	local ped = PlayerPedId()
-	local posped = GetEntityCoords(ped)
-	local num = StartShapeTestCapsule(posped.x,posped.y,posped.z+4,posped.x,posped.y,posped.z-2.0, 2, 1, ped, 7)
-	local arg1, arg2, arg3, arg4, arg5 = GetShapeTestResultEx(num)
-	print(arg1, arg2, arg3, arg4, arg5)
-end)
-
-function GetGroundHash(ped)
-	local posped = GetEntityCoords(ped)
-	local num = StartShapeTestCapsule(posped.x,posped.y,posped.z+4,posped.x,posped.y,posped.z-2.0, 2, 1, ped, 7)
-	local arg1, arg2, arg3, arg4, arg5 = GetShapeTestResultEx(num)
-	print(arg1, arg2, arg3, arg4, arg5)
-end
 
 --============================================================== Events
 
@@ -298,7 +281,7 @@ RegisterNetEvent('fishing:fishstart', function()
 	local playerPed = PlayerPedId()
 	local pos = GetEntityCoords(playerPed)
 	local hit, cords = IsFacingWater()
-	--print(hit, cords)
+	
 	if IsPedSwimming(playerPed) then return QBCore.Functions.Notify("You can't be swimming and fishing at the same time.", "error") end 
 	if IsPedInAnyVehicle(playerPed) then return QBCore.Functions.Notify("You need to exit your vehicle to start fishing.", "error") end 
 	if not hit and not cords then return QBCore.Functions.Notify("You need to be facing water to start fishing.", "error") end
@@ -547,16 +530,12 @@ function IsFacingWater()
     local ped = PlayerPedId()
     local headPos = GetPedBoneCoords(ped, 31086, 0.0, 0.0, 0.0)
     local offsetPos = GetOffsetFromEntityInWorldCoords(ped, 0.0, 50.0, -25.0)
-
-
     local hit, hitPos = TestProbeAgainstWater(headPos.x, headPos.y, headPos.z, offsetPos.x, offsetPos.y, offsetPos.z)
     local ray = StartExpensiveSynchronousShapeTestLosProbe(headPos.x, headPos.y, headPos.z, offsetPos.x, offsetPos.y, offsetPos.z, 160, 0, 7)
     local retval --[[ integer ]], hit --[[ boolean ]], endCoords --[[ vector3 ]], surfaceNormal --[[ vector3 ]], entityHit --[[ Entity ]] = GetShapeTestResult(ray)
     local retval2 --[[ boolean ]], height --[[ number ]] = TestVerticalProbeAgainstAllWater(offsetPos.x, offsetPos.y, offsetPos.z, 160)
     local isinwater = IsEntityInWater(ped)
-	print(isinwater)
-	print(retval, hit)
-	print(retval2, height)
+
     return retval2, height
 end
 
@@ -581,7 +560,7 @@ loseBaitAnimation = function()
 	RemoveAnimDict(animDict)
 	
 	QBCore.Functions.Notify('Fish took your bait!', 'error')
-
+	
 	fishAnimation()
 end
 
@@ -616,8 +595,8 @@ catchAnimation = function()
 end
 
 fishAnimation = function()
-	
-	local HasItem = QBCore.Functions.HasItem({'fishbait', 'fishingrod'})
+	--QBCore.Functions.TriggerCallback('QBCore.Functions.HasItem', function(HasItem)
+	local HasItem = QBCore.Functions.HasItem({'fishbait', 'fishingrod'}) 
 	if HasItem then
 		local ped = PlayerPedId()
 		local animDict = "amb@world_human_stand_fishing@idle_a"
@@ -629,7 +608,7 @@ fishAnimation = function()
 		TaskPlayAnim(ped, animDict, animName, 1.0, -1.0, 1.0, 11, 0, 0, 0, 0)
 		fishingRodEntity()
 		fishing = true
-		
+		 
 	else
 		endFishing()
 		QBCore.Functions.Notify("You dont have any fishing bait", "error")
@@ -652,7 +631,7 @@ endFishing = function()
 		ClearPedTasks(ped)
 		fishing = false
 		rodHandle = 0
-		
+		--exports['textUi']:DrawTextUi('hide')
     end
 end
 
@@ -678,7 +657,6 @@ openedTreasureChest = function()
 		QBCore.Functions.Notify("The corroded key has snapped", "error", 7500)
 	end
 	TriggerServerEvent('fishing:server:getYoStuff')
-	print("Going to server")
 
 	QBCore.Functions.Notify("Treasure chest opened! Be sure to collect all of your loot!!", "success", 7500)
 	local ShopItems = {}
